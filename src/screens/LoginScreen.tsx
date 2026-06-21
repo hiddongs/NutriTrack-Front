@@ -50,6 +50,8 @@ export default function LoginScreen() {
   };
   return (
     <View style={styles.container}>
+      <Text style={styles.logo}>🥗</Text>
+      <Text style={styles.appName}>NutriTrack</Text>
       <Text style={styles.title}>로그인</Text>
       <Text style={styles.sub}>이메일과 비밀번호를 입력하세요</Text>
 
@@ -68,6 +70,10 @@ export default function LoginScreen() {
       />
       <TouchableOpacity style={styles.btn} onPress={handleLogin}>
         <Text style={styles.btnText}>로그인</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => router.push("/join" as any)}>
+        <Text style={styles.joinText}>계정이 없으신가요? 회원가입</Text>
       </TouchableOpacity>
 
       {/* 임시 홈 이동 버튼 — 개발 중 테스트용 */}
@@ -89,6 +95,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#fff",
   },
+  logo: {
+    fontSize: 48,
+    marginBottom: 24,
+  },
+  appName: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#185FA5",
+    marginBottom: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: "600",
@@ -98,7 +114,7 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     height: 48,
-    borderColor: "ddd",
+    borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 15,
@@ -108,6 +124,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#888",
     marginBottom: 40,
+  },
+  joinText: {
+    color: "#185FA5",
+    fontSize: 14,
+    marginBottom: 16,
+    marginTop: 16,
   },
   btn: {
     backgroundColor: "#185FA5",

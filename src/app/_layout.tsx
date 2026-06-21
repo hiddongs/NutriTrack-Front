@@ -34,13 +34,12 @@ export default function RootLayout() {
 
   const checkLoginStatus = async () => {
     try {
-      await AsyncStorage.removeItem("accessToken");
       const token = await AsyncStorage.getItem("accessToken");
 
       if (token !== null) {
         // 토큰 있으면 홈으로 리다이렉트
         // router.replace → 뒤로가기 불가 (스택 교체)
-        router.replace("/home" as any);
+        router.replace("/(tabs)" as any);
       } else {
         // 토큰 없으면 온보딩으로
         router.replace("/onboarding" as any);
@@ -81,7 +80,7 @@ export default function RootLayout() {
       <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
       <Stack.Screen name="login" options={{ gestureEnabled: false }} />
       <Stack.Screen name="join" />
-      <Stack.Screen name="home" options={{ gestureEnabled: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="food-input" />
     </Stack>
   );
