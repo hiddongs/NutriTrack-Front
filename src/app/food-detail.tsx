@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -24,7 +25,27 @@ export default function FoodDetailScreen() {
     parseFloat(String(calorie)) * (parseFloat(amount) / 100);
 
   const handleAdd = async () => {
+    const token = await AsyncStorage.getItem("accessToken");
+    console.log("토큰: ", token);
     console.log("추가할 데이터: ", { foodName, amount, actualCalorie });
+
+    fetch("http://localhost:8080/api/diet/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        foodName: foodName,
+        calorie: actualCalorie,
+        carb: parseFloat(String(carb)),
+        protein: parseFloat(String(protein)),
+        fat: parseFloat(String(fat)),
+        amount: parseFloat(amount),
+        mealType: "아침", // 나중에 동적 변경
+        date: new Date().toISOString().split("T")[0],
+      }),
+    });
   };
 
   return (

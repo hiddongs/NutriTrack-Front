@@ -11,8 +11,10 @@
 //   → props로 전달할 필요 없어서 코드가 깔끔해짐 (prop drilling 제거)
 // ============================================================
 
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router, useFocusEffect } from "expo-router";
+import { jwtDecode } from "jwt-decode";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   SafeAreaView,
@@ -58,6 +60,7 @@ type UserData = {
 // ─────────────────────────────────────────────
 // 더미 데이터 (API 연동 전 임시)
 // ─────────────────────────────────────────────
+
 const DUMMY_USER: UserData = {
   name: "김민준",
   targetCalorie: 2000,
@@ -235,13 +238,67 @@ function MealCard({ meal, onPress }: MealCardProps) {
 // ============================================================
 export default function HomeScreen() {
   const [loading] = useState<boolean>(false);
-  const [userData] = useState<UserData>(DUMMY_USER);
-  const [todayData] = useState<TodayData>(DUMMY_TODAY);
+  const [userData, setUserData] = useState<UserData>(DUMMY_USER);
+  const [todayData, setTodayData] = useState<TodayData>(DUMMY_TODAY);
 
-  useEffect(() => {
-    // 추후 API 연동
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, []),
+  );
 
+  const fetchData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      const decoded = jwtDecode<{ sub: string }>(token);
+      const userId = decoded.sub;
+
+      const userResponse = await fetch(
+        `http://localhost:8080/api/users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const userData = await userResponse.json();
+
+      const dietResponse = await fetch(
+        `http://localhost:8080/api/diet/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const dietData = await dietResponse.json();
+      console.log("dietData:", dietData);
+      setUserData({
+        name: userData.name,
+        targetCalorie: 2000,
+      });
+
+      const todayDate = new Date().toISOString().split("T")[0];
+      const todayRecords = dietData.filter(
+        (record: any) => record.date === todayDate,
+      );
+      console.log("dietData:", JSON.stringify(dietData));
+      console.log("todayDate:", todayDate);
+      const totalCalorie = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.calorie,
+        0,
+      );
+
+      setTodayData((prev) => ({
+        ...prev,
+        totalCalorie,
+      }));
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const today = new Date().toLocaleDateString("ko-KR", {
     month: "long",
     day: "numeric",
