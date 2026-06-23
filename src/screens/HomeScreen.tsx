@@ -257,43 +257,47 @@ export default function HomeScreen() {
 
       const userResponse = await fetch(
         `http://localhost:8080/api/users/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      const userData = await userResponse.json();
+      const userData = await userResponse.json(); // ← 이게 없어요!
 
       const dietResponse = await fetch(
+        // ← 이것도 없어요!
         `http://localhost:8080/api/diet/${userId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const dietData = await dietResponse.json();
-      console.log("dietData:", dietData);
-      setUserData({
-        name: userData.name,
-        targetCalorie: 2000,
-      });
+
+      setUserData({ name: userData.name, targetCalorie: 2000 });
 
       const todayDate = new Date().toISOString().split("T")[0];
       const todayRecords = dietData.filter(
         (record: any) => record.date === todayDate,
       );
-      console.log("dietData:", JSON.stringify(dietData));
-      console.log("todayDate:", todayDate);
+
       const totalCalorie = todayRecords.reduce(
         (sum: number, record: any) => sum + record.calorie,
+        0,
+      );
+      const totalCarb = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.carb,
+        0,
+      );
+      const totalProtein = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.protein,
+        0,
+      );
+      const totalFat = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.fat,
         0,
       );
 
       setTodayData((prev) => ({
         ...prev,
         totalCalorie,
+        carb: { ...prev.carb, current: totalCarb },
+        protein: { ...prev.protein, current: totalProtein },
+        fat: { ...prev.fat, current: totalFat },
       }));
     } catch (error) {
       console.error(error);
@@ -304,7 +308,6 @@ export default function HomeScreen() {
     day: "numeric",
     weekday: "short",
   });
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>

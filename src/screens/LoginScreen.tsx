@@ -42,7 +42,7 @@ export default function LoginScreen() {
         // 토큰을 AsyncStorage에 저장
         await AsyncStorage.setItem("accessToken", accessToken);
 
-        router.replace("/home" as any);
+        router.replace("/(tabs)" as any);
       }
     } catch (error) {
       console.error("로그인 실패 : ", error);

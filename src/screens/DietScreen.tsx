@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router, useFocusEffect } from "expo-router";
+import { jwtDecode } from "jwt-decode";
 
 type FoodItem = {
   FOOD_CD: string; // 고유 코드
@@ -27,7 +29,71 @@ export default function DietScreen() {
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [todayRecords, setTodayRecords] = useState<any[]>([]);
 
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, []),
+  );
+
+  const fetchData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      const decoded = jwtDecode<{ sub: string }>(token);
+      const userId = decoded.sub;
+
+      const userResponse = await fetch(
+        `http://localhost:8080/api/users/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const dietResponse = await fetch(
+        `http://localhost:8080/api/diet/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      const dietData = await dietResponse.json();
+      console.log("dietData:", dietData);
+
+      const todayDate = new Date().toISOString().split("T")[0];
+      const todayRecords = dietData.filter(
+        (record: any) => record.date === todayDate,
+      );
+      console.log("dietData:", JSON.stringify(dietData));
+      console.log("todayDate:", todayDate);
+      const totalCalorie = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.calorie,
+        0,
+      );
+
+      const totalCarb = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.carb,
+        0,
+      );
+      const totalProtein = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.protein,
+        0,
+      );
+      const totalFat = todayRecords.reduce(
+        (sum: number, record: any) => sum + record.fat,
+        0,
+      );
+
+      setTodayRecords(todayRecords);
+    } catch (error) {
+      console.error(error);
+    }
+  };
   const handleSearch = async () => {
     if (!searchText.trim()) return;
     // trim() 공백 제거 함수
@@ -75,6 +141,18 @@ export default function DietScreen() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.sectionTitle}>오늘 먹은 것</Text>
+      {todayRecords.length === 0 ? (
+        <Text style={styles.emptyText}>아직 기록이 없어요</Text>
+      ) : (
+        todayRecords.map((record: any) => (
+          <View key={record.id} style={styles.recordCard}>
+            <Text style={styles.foodName}>{record.foodName}</Text>
+            <Text style={styles.calorie}>{record.calorie} kcal</Text>
+          </View>
+        ))
+      )}
+
       <View style={styles.searchRow}>
         <TextInput
           style={styles.input}
@@ -173,4 +251,19 @@ const styles = StyleSheet.create({
 
   resultText: { fontSize: 14, color: "#111" },
   loader: { marginTop: 20 },
+
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: 12,
+  },
+  emptyText: { fontSize: 14, color: "#aaa", marginBottom: 16 },
+  recordCard: {
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    borderColor: "#eee",
+    marginBottom: 8,
+  },
 });

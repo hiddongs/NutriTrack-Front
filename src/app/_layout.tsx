@@ -34,6 +34,7 @@ export default function RootLayout() {
 
   const checkLoginStatus = async () => {
     try {
+      
       const token = await AsyncStorage.getItem("accessToken");
 
       if (token !== null) {
